@@ -1,0 +1,13 @@
+# Python virtual environment
+.venv/
+__pycache__/
+
+# Database file (for development)
+test.db
+
+# Firebase service account key (VERY IMPORTANT)
+app/firebase-service-account.json
+
+# IDE specific files
+.idea/
+.vscode/
