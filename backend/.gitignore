@@ -11,3 +11,5 @@ app/firebase-service-account.json
 # IDE specific files
 .idea/
 .vscode/
+
+.env
