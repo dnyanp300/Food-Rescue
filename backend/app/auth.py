@@ -10,7 +10,7 @@ from . import models, schemas, database
 
 # --- Configuration ---
 # Generate with: openssl rand -hex 32
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET_KEY = ("SECRET_KEY", "a_default_secret_key_if_not_set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
 

@@ -4,13 +4,13 @@ import { getAnalytics } from "firebase/analytics";
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC8nxcDeo0cij9emiDMdI_LeOlpBdXIU5Q",
-  authDomain: "signinfood-d1616.firebaseapp.com",
-  projectId: "signinfood-d1616",
-  storageBucket: "signinfood-d1616.firebasestorage.app",
-  messagingSenderId: "522875178537",
-  appId: "1:522875178537:web:07ec9a7ce6d8f1e46b9638",
-  measurementId: "G-X0S7HJK1ZF"
+apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
