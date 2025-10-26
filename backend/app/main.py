@@ -11,21 +11,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Firebase Admin Setup ---
-import firebase_admin
-from firebase_admin import credentials
-
-# Get Firebase credentials from environment variable
-FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
-
-# Check if the credentials file exists
-if not os.path.exists(FIREBASE_CRED_PATH):
-    raise FileNotFoundError(
-        f"Firebase service account file not found at: {FIREBASE_CRED_PATH}\n"
-        f"Please set FIREBASE_SERVICE_ACCOUNT_PATH environment variable or place the file at the default location."
-    )
-
-cred = credentials.Certificate(FIREBASE_CRED_PATH)
-firebase_admin.initialize_app(cred)
+try:
+    import firebase_admin
+    from firebase_admin import credentials
+    
+    # Get Firebase credentials from environment variable
+    FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
+    
+    # Check if the credentials file exists
+    if os.path.exists(FIREBASE_CRED_PATH):
+        cred = credentials.Certificate(FIREBASE_CRED_PATH)
+        firebase_admin.initialize_app(cred)
+    else:
+        print(f"Warning: Firebase service account file not found at: {FIREBASE_CRED_PATH}")
+        print("Google authentication will not work. Please configure Firebase credentials.")
+except Exception as e:
+    print(f"Warning: Firebase initialization failed: {e}")
+    print("Google authentication will not be available.")
 
 # Create all database tables
 models.Base.metadata.create_all(bind=engine)
