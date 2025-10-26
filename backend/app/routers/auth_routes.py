@@ -9,7 +9,6 @@ from .. import schemas, models, auth, database
 # --- ADD THESE 3 IMPORTS ---
 from firebase_admin import auth as firebase_auth
 from pydantic import BaseModel
-from pydantic.errors import PydanticUserError # To fix the pydantic User.from_orm error
 
 router = APIRouter()
 
@@ -59,8 +58,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     
-    # Get the user data in the correct Pydantic schema
-    user_schema = schemas.User.from_orm(user)
+    # Get the user data in the correct Pydantic schema (Pydantic v2)
+    user_schema = schemas.User.model_validate(user)
     
     return {"access_token": access_token, "token_type": "bearer", "user": user_schema}
 
@@ -83,8 +82,10 @@ def google_auth(
         # 1. Verify the ID token sent from the frontend
         decoded_token = firebase_auth.verify_id_token(google_token.token)
         
+        # Extract user information
+        uid = decoded_token.get("uid")
         email = decoded_token.get("email")
-        name = decoded_token.get("name", "Google User") # Get name, or use a default
+        name = decoded_token.get("name", "Google User")
         
         if not email:
             raise HTTPException(
@@ -92,11 +93,14 @@ def google_auth(
                 detail="Email not found in Google token"
             )
 
+    except HTTPException:
+        # Re-raise HTTPExceptions
+        raise
     except Exception as e:
         # Token is invalid or expired
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Google token: {e}"
+            detail=f"Invalid Google token: {str(e)}"
         )
 
     # 2. Check if this user already exists in our database
@@ -129,11 +133,8 @@ def google_auth(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     
-    # Use the Pydantic v2 .from_attributes() method
-    try:
-        user_schema = schemas.User.from_orm(user)
-    except PydanticUserError: # Fallback for the Pydantic v2 warning/error
-        user_schema = schemas.User.from_attributes(user)
+    # Convert user model to schema (Pydantic v2 uses from_attributes)
+    user_schema = schemas.User.model_validate(user)
     
     return {
         "access_token": access_token, 

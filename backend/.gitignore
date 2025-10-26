@@ -1,15 +1,33 @@
 # Python virtual environment
 .venv/
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
 
 # Database file (for development)
 test.db
+*.db
+*.sqlite
+*.sqlite3
 
 # Firebase service account key (VERY IMPORTANT)
 app/firebase-service-account.json
+**/firebase-service-account.json
 
 # IDE specific files
 .idea/
 .vscode/
 
+# Environment variables
 .env
+.env.local
+.env.*.local
+
+# Logs
+*.log

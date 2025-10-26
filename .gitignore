@@ -1,0 +1,64 @@
+# Root level .gitignore
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase service account keys
+**/firebase-service-account.json
+*firebase-service-account.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database files (development only)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+.Python

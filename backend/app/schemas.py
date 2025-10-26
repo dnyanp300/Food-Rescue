@@ -51,7 +51,7 @@ class FoodItem(FoodItemBase):
     image_url: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Claim Schemas ---
 class ClaimBase(BaseModel):
@@ -65,8 +65,8 @@ class Claim(ClaimBase):
     food_item: FoodItem # Nested food item details
     ngo: User # Nested NGO details
 
-class Config:
-    from_attributes = True
+    class Config:
+        from_attributes = True
 
 class ClaimUpdate(BaseModel):
     status: FoodStatus # Only status can be updated (delivered/cancelled)

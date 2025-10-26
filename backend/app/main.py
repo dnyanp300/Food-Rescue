@@ -4,14 +4,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from . import models
 from .routers import auth_routes, donor_routes, ngo_routes, admin_routes, ai_routes
+import os
+from dotenv import load_dotenv
 
-# --- ADD THESE 3 LINES ---
+# Load environment variables from .env file
+load_dotenv()
+
+# --- Firebase Admin Setup ---
 import firebase_admin
 from firebase_admin import credentials
 
-cred = credentials.Certificate("app/firebase-service-account.json")
+# Get Firebase credentials from environment variable
+FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
+
+# Check if the credentials file exists
+if not os.path.exists(FIREBASE_CRED_PATH):
+    raise FileNotFoundError(
+        f"Firebase service account file not found at: {FIREBASE_CRED_PATH}\n"
+        f"Please set FIREBASE_SERVICE_ACCOUNT_PATH environment variable or place the file at the default location."
+    )
+
+cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred)
-# --- END OF NEW LINES ---
 
 # Create all database tables
 models.Base.metadata.create_all(bind=engine)

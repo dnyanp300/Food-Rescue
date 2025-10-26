@@ -6,11 +6,13 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
+import os
 from . import models, schemas, database
 
 # --- Configuration ---
+# Get secret key from environment variable
 # Generate with: openssl rand -hex 32
-SECRET_KEY = ("SECRET_KEY", "a_default_secret_key_if_not_set")
+SECRET_KEY = os.getenv("SECRET_KEY", "a_default_secret_key_if_not_set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
 
