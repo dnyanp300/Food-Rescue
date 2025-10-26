@@ -14,17 +14,28 @@ load_dotenv()
 try:
     import firebase_admin
     from firebase_admin import credentials
+    import json
     
-    # Get Firebase credentials from environment variable
-    FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
+    # Try to get Firebase credentials from environment variable first
+    firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
     
-    # Check if the credentials file exists
-    if os.path.exists(FIREBASE_CRED_PATH):
-        cred = credentials.Certificate(FIREBASE_CRED_PATH)
+    if firebase_creds_json:
+        # Parse JSON from environment variable
+        creds_dict = json.loads(firebase_creds_json)
+        cred = credentials.Certificate(creds_dict)
         firebase_admin.initialize_app(cred)
+        print("✅ Firebase initialized successfully from environment variable!")
     else:
-        print(f"Warning: Firebase service account file not found at: {FIREBASE_CRED_PATH}")
-        print("Google authentication will not work. Please configure Firebase credentials.")
+        # Fallback to file path
+        FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
+        
+        if os.path.exists(FIREBASE_CRED_PATH):
+            cred = credentials.Certificate(FIREBASE_CRED_PATH)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized successfully from file!")
+        else:
+            print(f"Warning: Firebase service account file not found at: {FIREBASE_CRED_PATH}")
+            print("Google authentication will not work. Please configure Firebase credentials.")
 except Exception as e:
     print(f"Warning: Firebase initialization failed: {e}")
     print("Google authentication will not be available.")
