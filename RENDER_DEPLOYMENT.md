@@ -43,7 +43,11 @@ Add these environment variables:
 ```env
 SECRET_KEY=your_very_secret_key_here_generate_with_openssl_rand_hex_32
 FIREBASE_SERVICE_ACCOUNT_PATH=app/firebase-service-account.json
-PYTHON_VERSION=3.11
+```
+
+**Optional Environment Variables:**
+```env
+PYTHON_VERSION=3.11.7
 PORT=10000
 ```
 
