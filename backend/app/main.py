@@ -40,6 +40,7 @@ origins = [
     "http://localhost:3000",
     "http://localhost:3001", # Sometimes React uses this
     "http://localhost:5173",
+    "https://food-rescue-backend-rgfd.onrender.com", # Render backend
 ]
 
 app.add_middleware(
