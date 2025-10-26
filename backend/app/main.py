@@ -52,6 +52,7 @@ origins = [
     "http://localhost:3001", # Sometimes React uses this
     "http://localhost:5173",
     "https://food-rescue-backend-rgfd.onrender.com", # Render backend
+    os.getenv("FRONTEND_URL", "https://food-rescue-frontend.onrender.com"), # Render frontend
 ]
 
 app.add_middleware(
