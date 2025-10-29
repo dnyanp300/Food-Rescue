@@ -102,4 +102,12 @@ def send_otp_email(to_email: str, code: str, expires_minutes: int = 10):
     email_client.send(to_email, subject, body)
 
 
-
+def send_password_reset_email(to_email: str, reset_url: str, expires_minutes: int = 60):
+    subject = "Reset your Food Rescue password"
+    body = (
+        f"We received a request to reset your password.\n\n"
+        f"Click the link below to set a new password (valid for {expires_minutes} minutes):\n"
+        f"{reset_url}\n\n"
+        f"If you did not request this, you can ignore this email."
+    )
+    email_client.send(to_email, subject, body)

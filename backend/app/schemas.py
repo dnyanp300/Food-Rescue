@@ -38,6 +38,14 @@ class OtpVerify(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
 
+# --- Password Reset Schemas ---
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
 # --- Food Schemas ---
 class FoodItemBase(BaseModel):
     name: str

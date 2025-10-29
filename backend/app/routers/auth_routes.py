@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 import random
 import string
-from ..services.email_service import send_otp_email
+from ..services.email_service import send_otp_email, send_password_reset_email
 
 router = APIRouter()
 
@@ -140,3 +140,78 @@ def verify_otp(payload: OtpVerifyRequest, db: Session = Depends(database.get_db)
     access_token = auth.create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     user_schema = schemas.User.model_validate(user)
     return {"access_token": access_token, "token_type": "bearer", "user": user_schema}
+
+
+# -------- Password Reset --------
+class PasswordResetRequestBody(BaseModel):
+    email: EmailStr
+
+
+@router.post("/auth/password/reset/request")
+def password_reset_request(payload: PasswordResetRequestBody, db: Session = Depends(database.get_db)):
+    user = auth.get_user(db, email=payload.email)
+    if not user:
+        # For security, do not reveal user existence
+        return {"message": "If the email exists, a reset link has been sent"}
+
+    # Generate token
+    token = "".join(random.choices(string.ascii_letters + string.digits, k=48))
+    expires_at = datetime.utcnow() + timedelta(minutes=60)
+
+    # Invalidate previous unused tokens
+    db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.email == payload.email,
+        models.PasswordResetToken.used == False
+    ).update({models.PasswordResetToken.used: True})
+
+    reset_entry = models.PasswordResetToken(
+        email=payload.email,
+        token=token,
+        expires_at=expires_at,
+    )
+    db.add(reset_entry)
+    db.commit()
+
+    frontend_base = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
+    reset_url = f"{frontend_base}/reset-password?token={token}"
+
+    try:
+        send_password_reset_email(payload.email, reset_url, 60)
+    except Exception:
+        # Logged by email client
+        pass
+
+    response = {"message": "If the email exists, a reset link has been sent"}
+    if os.getenv("ENV", "development").lower() != "production":
+        response["dev_token"] = token
+        response["reset_url"] = reset_url
+    return response
+
+
+class PasswordResetConfirmBody(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/auth/password/reset/confirm")
+def password_reset_confirm(payload: PasswordResetConfirmBody, db: Session = Depends(database.get_db)):
+    entry: models.PasswordResetToken | None = (
+        db.query(models.PasswordResetToken)
+        .filter(models.PasswordResetToken.token == payload.token)
+        .first()
+    )
+    if not entry or entry.used or entry.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    user = auth.get_user(db, email=entry.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update password
+    user.hashed_password = auth.get_password_hash(payload.new_password)
+    entry.used = True
+    db.add(user)
+    db.add(entry)
+    db.commit()
+
+    return {"message": "Password has been reset successfully"}

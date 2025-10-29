@@ -94,6 +94,10 @@ export const authApi = {
       body: JSON.stringify({ email, code }),
     }).then(handleResponse);
   },
+  requestPasswordReset: (email) =>
+    api.post(`/auth/password/reset/request`, { email }),
+  confirmPasswordReset: (token, new_password) =>
+    api.post(`/auth/password/reset/confirm`, { token, new_password }),
 };
 
 export const donorApi = {
