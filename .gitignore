@@ -62,3 +62,16 @@ htmlcov/
 *.pyo
 *.pyd
 .Python
+
+# Test files and JSON data files
+*_test.json
+*user.json
+*admin*.json
+*food*.json
+*otp*.json
+*claim*.json
+test_*.json
+
+# Backend environment
+backend/.env
+backend/.env.local

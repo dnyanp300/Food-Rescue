@@ -5,40 +5,17 @@ from .database import engine
 from . import models
 from .routers import auth_routes, donor_routes, ngo_routes, admin_routes, ai_routes
 import os
+import logging
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Load environment variables from .env file
 load_dotenv()
-
-# --- Firebase Admin Setup ---
-try:
-    import firebase_admin
-    from firebase_admin import credentials
-    import json
-    
-    # Try to get Firebase credentials from environment variable first
-    firebase_creds_json = os.getenv("FIREBASE_CREDENTIALS")
-    
-    if firebase_creds_json:
-        # Parse JSON from environment variable
-        creds_dict = json.loads(firebase_creds_json)
-        cred = credentials.Certificate(creds_dict)
-        firebase_admin.initialize_app(cred)
-        print("✅ Firebase initialized successfully from environment variable!")
-    else:
-        # Fallback to file path
-        FIREBASE_CRED_PATH = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "app/firebase-service-account.json")
-        
-        if os.path.exists(FIREBASE_CRED_PATH):
-            cred = credentials.Certificate(FIREBASE_CRED_PATH)
-            firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized successfully from file!")
-        else:
-            print(f"Warning: Firebase service account file not found at: {FIREBASE_CRED_PATH}")
-            print("Google authentication will not work. Please configure Firebase credentials.")
-except Exception as e:
-    print(f"Warning: Firebase initialization failed: {e}")
-    print("Google authentication will not be available.")
 
 # Create all database tables
 models.Base.metadata.create_all(bind=engine)

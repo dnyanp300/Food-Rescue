@@ -5,10 +5,12 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from .. import schemas, models, auth, database
-
-# --- ADD THESE 3 IMPORTS ---
-from firebase_admin import auth as firebase_auth
-from pydantic import BaseModel
+import os
+from pydantic import BaseModel, EmailStr
+from datetime import datetime, timedelta
+import random
+import string
+from ..services.email_service import send_otp_email
 
 router = APIRouter()
 
@@ -21,7 +23,16 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
     hashed_password = auth.get_password_hash(user.password)
     
     # Default verification based on role
-    is_verified = user.role == models.UserRole.donor # Donors verified by default
+    is_verified = user.role == models.UserRole.donor  # Donors verified by default
+    if user.role == models.UserRole.admin:
+        # Auto-verify the first admin to enable bootstrap
+        existing_admin = (
+            db.query(models.User)
+            .filter(models.User.role == models.UserRole.admin)
+            .first()
+        )
+        if existing_admin is None:
+            is_verified = True
     
     new_user = models.User(
         email=user.email,
@@ -50,7 +61,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
         
-    if not user.is_verified:
+    if not user.is_verified and user.role != models.UserRole.admin:
         raise HTTPException(status_code=403, detail="User account not yet verified by admin")
 
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -68,76 +79,64 @@ class GoogleToken(BaseModel):
     """The model for the request body, expecting a Google ID token."""
     token: str
 
-@router.post("/auth/google", response_model=schemas.Token)
-def google_auth(
-    google_token: GoogleToken, 
-    db: Session = Depends(database.get_db)
-):
-    """
-    Handles Google Sign-In.
-    Verifies the Google ID token, finds the user in our DB,
-    or creates a new user if they don't exist.
-    """
-    try:
-        # 1. Verify the ID token sent from the frontend
-        decoded_token = firebase_auth.verify_id_token(google_token.token)
-        
-        # Extract user information
-        uid = decoded_token.get("uid")
-        email = decoded_token.get("email")
-        name = decoded_token.get("name", "Google User")
-        
-        if not email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Email not found in Google token"
-            )
-
-    except HTTPException:
-        # Re-raise HTTPExceptions
-        raise
-    except Exception as e:
-        # Token is invalid or expired
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Google token: {str(e)}"
-        )
-
-    # 2. Check if this user already exists in our database
+@router.post("/auth/otp/request")
+def request_otp(email: EmailStr, db: Session = Depends(database.get_db)):
     user = auth.get_user(db, email=email)
-    
     if not user:
-        # 3. User doesn't exist. Create a new user in our database.
-        
-        # We create a placeholder password, as they will only use Google to log in.
-        placeholder_password = auth.get_password_hash(f"google-user-secret-{email}")
-        
-        # Default new Google users to 'donor' and auto-verify them.
-        user = models.User(
-            email=email,
-            name=name,
-            hashed_password=placeholder_password,
-            role=models.UserRole.donor,
-            location="Not specified",
-            is_verified=True, # Auto-verify Google users
-            is_active=True
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # 4. User exists (or was just created). Create and return *our* app's
-    # access token so they can make authenticated requests.
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+    code = "".join(random.choices(string.digits, k=6))
+    expires_at = datetime.utcnow() + timedelta(minutes=10)
+
+    # Invalidate previous OTPs
+    db.query(models.OtpCode).filter(models.OtpCode.email == email, models.OtpCode.consumed == False).update({models.OtpCode.consumed: True})
+    otp = models.OtpCode(email=email, code=code, expires_at=expires_at)
+    db.add(otp)
+    db.commit()
+
+    # Send email (will fall back to console if SMTP_STRICT=false)
+    try:
+        send_otp_email(email, code, 10)
+    except Exception:
+        # The email client already logged the error; proceed so that dev can continue
+        pass
+
+    response = {"message": "OTP generated", "expires_in_minutes": 10}
+    if os.getenv("ENV", "development").lower() != "production":
+        # Expose OTP in non-production for local testing
+        response["dev_code"] = code
+    return response
+
+
+class OtpVerifyRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+@router.post("/auth/otp/verify", response_model=schemas.Token)
+def verify_otp(payload: OtpVerifyRequest, db: Session = Depends(database.get_db)):
+    otp: models.OtpCode | None = (
+        db.query(models.OtpCode)
+        .filter(models.OtpCode.email == payload.email, models.OtpCode.code == payload.code, models.OtpCode.consumed == False)
+        .order_by(models.OtpCode.id.desc())
+        .first()
     )
-    
-    # Convert user model to schema (Pydantic v2 uses from_attributes)
+
+    if not otp or otp.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+
+    otp.consumed = True
+    db.add(otp)
+    db.commit()
+
+    user = auth.get_user(db, email=payload.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    if not user.is_verified and user.role != models.UserRole.admin:
+        raise HTTPException(status_code=403, detail="User account not yet verified by admin")
+
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     user_schema = schemas.User.model_validate(user)
-    
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer", 
-        "user": user_schema
-    }
+    return {"access_token": access_token, "token_type": "bearer", "user": user_schema}

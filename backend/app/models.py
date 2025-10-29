@@ -58,3 +58,11 @@ class Claim(Base):
     
     food_item = relationship("FoodItem", back_populates="claim")
     ngo = relationship("User", back_populates="claims")
+
+class OtpCode(Base):
+    __tablename__ = "otp_codes"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    code = Column(String, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    consumed = Column(Boolean, default=False)

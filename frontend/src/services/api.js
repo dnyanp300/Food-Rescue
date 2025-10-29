@@ -8,9 +8,26 @@ const getAuthToken = () => {
 
 const handleResponse = async (response) => {
   if (response.status === 204) return {};
-  const data = await response.json();
+  
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    // If response is not JSON, create a generic error
+    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+  }
+  
   if (!response.ok) {
-    throw new Error(data.detail || response.statusText);
+    // Handle different error formats
+    if (data.detail) {
+      throw new Error(data.detail);
+    } else if (data.message) {
+      throw new Error(data.message);
+    } else if (data.error) {
+      throw new Error(data.error);
+    } else {
+      throw new Error(response.statusText || 'An error occurred');
+    }
   }
   return data;
 };
@@ -64,14 +81,19 @@ export const authApi = {
     }).then(handleResponse);
   },
   register: (data) => api.post("/auth/register", data),
-  googleLogin: (token) => {
-    // This is the special call for Google Sign-In
-    return fetch(`${API_BASE_URL}/auth/google`, {
+  requestOtp: (email) => {
+    return fetch(`${API_BASE_URL}/auth/otp/request?email=${encodeURIComponent(email)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: token }),
     }).then(handleResponse);
-  }
+  },
+  verifyOtp: (email, code) => {
+    return fetch(`${API_BASE_URL}/auth/otp/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    }).then(handleResponse);
+  },
 };
 
 export const donorApi = {

@@ -28,6 +28,13 @@ class Token(BaseModel):
     token_type: str
     user: User
 
+class OtpRequest(BaseModel):
+    email: EmailStr
+
+class OtpVerify(BaseModel):
+    email: EmailStr
+    code: str
+
 class TokenData(BaseModel):
     email: Optional[str] = None
 

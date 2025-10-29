@@ -40,17 +40,17 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-  
-  const googleLogin = async (idToken) => {
-    try {
-      const data = await authApi.googleLogin(idToken);
-      const authData = { token: data.access_token, user: data.user };
-      setAuth(authData);
-      localStorage.setItem("auth", JSON.stringify(authData));
-      return data.user;
-    } catch (error) {
-      throw error;
-    }
+
+  const requestOtp = async (email) => {
+    return authApi.requestOtp(email);
+  };
+
+  const verifyOtp = async (email, code) => {
+    const data = await authApi.verifyOtp(email, code);
+    const authData = { token: data.access_token, user: data.user };
+    setAuth(authData);
+    localStorage.setItem("auth", JSON.stringify(authData));
+    return data.user;
   };
 
   const logout = () => {
@@ -65,7 +65,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    googleLogin,
+    requestOtp,
+    verifyOtp,
   };
 
   return (
