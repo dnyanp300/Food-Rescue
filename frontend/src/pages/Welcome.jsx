@@ -17,7 +17,7 @@ export default function Welcome() {
         >
           <div className="flex items-center gap-3">
             <img 
-              src="/food-rescue-logo.png" 
+              src="/food-rescue-concept.png" 
               alt="Food Rescue Logo" 
               className="h-12 w-12 object-contain rounded-xl shadow-lg"
               onError={(e) => {
@@ -99,7 +99,7 @@ export default function Welcome() {
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
-                src="/food-rescue-concept.png"
+                src="/food-rescue-logo.png"
                 alt="Food Rescue - Connecting Food Waste with Hunger"
                 className="w-full h-auto object-cover rounded-2xl"
                 onError={(e) => {
@@ -236,7 +236,7 @@ export default function Welcome() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">✓</span>
-                  <span>Easy posting with photos and details</span>
+                  <span>Easy posting with clear details</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">✓</span>
@@ -244,7 +244,7 @@ export default function Welcome() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-600 font-bold">✓</span>
-                  <span>Tax benefits for donations</span>
+                  <span>Transparent matching and pickup coordination</span>
                 </li>
               </ul>
             </Card>
@@ -314,36 +314,7 @@ export default function Welcome() {
         </motion.div>
       </section>
 
-      {/* Impact Stats */}
-      <section className="container mx-auto px-4 py-16 bg-gradient-to-br from-green-600 to-teal-600 rounded-3xl text-white">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto text-center space-y-8"
-        >
-          <h3 className="text-4xl font-bold">Our Impact</h3>
-          <div className="grid sm:grid-cols-3 gap-8">
-            {[
-              { number: "10,000+", label: "Meals Rescued" },
-              { number: "500+", label: "Active Donors" },
-              { number: "50+", label: "Partner NGOs" }
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20"
-              >
-                <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                <div className="text-green-100">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
+      {/* Impact Stats removed per request */}
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-16">
@@ -380,6 +351,15 @@ export default function Welcome() {
         <div className="text-center text-gray-600 space-y-2">
           <p className="font-semibold text-gray-800">Food Rescue Platform</p>
           <p>Connecting Food • Ending Hunger • Reducing Waste</p>
+          <div className="pt-4 space-y-1">
+            <p className="text-sm text-gray-700">
+              Contact: <span className="font-medium text-gray-900">Dnyan Patil</span>
+            </p>
+            <p className="text-sm text-gray-700">Phone: <a href="tel:6363796961" className="underline">6363796961</a></p>
+            <p className="text-sm text-gray-700">
+              LinkedIn: <a href="https://www.linkedin.com/in/dnyanpatil/" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">linkedin.com/in/dnyanpatil/</a>
+            </p>
+          </div>
           <p className="text-sm pt-4">© 2025 All rights reserved</p>
         </div>
       </footer>
