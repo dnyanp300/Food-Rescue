@@ -52,8 +52,20 @@ export default function Login() {
         <Card className="backdrop-blur-xl bg-white/95 shadow-2xl border border-white/20 hover:shadow-green-200/50 transition-all duration-300">
           <CardHeader className="text-center space-y-2 pb-6">
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center animate-float shadow-lg shadow-green-500/30">
-                <span className="text-4xl">🍽️</span>
+              <div className="relative w-20 h-20 rounded-3xl flex items-center justify-center animate-float shadow-lg shadow-green-500/30 overflow-hidden">
+                <img 
+                  src="/food-rescue-logo.png" 
+                  alt="Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = e.target.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-full bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 hidden items-center justify-center">
+                  <span className="text-4xl">🍽️</span>
+                </div>
               </div>
             </div>
             <CardTitle className="text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -87,6 +99,7 @@ export default function Login() {
                     type="email"
                     placeholder="you@example.com"
                     required
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12"

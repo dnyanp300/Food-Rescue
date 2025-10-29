@@ -27,11 +27,33 @@ export default function Register() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  });
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const validatePassword = (password) => {
+    setPasswordRequirements({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    });
+  };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    if (name === "password") {
+      validatePassword(value);
+    }
   };
   
   const handleRoleChange = (value) => {
@@ -42,6 +64,14 @@ export default function Register() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    
+    // Validate password strength
+    const allRequirementsMet = Object.values(passwordRequirements).every(req => req);
+    if (!allRequirementsMet) {
+      setError("Please ensure your password meets all requirements");
+      return;
+    }
+    
     setLoading(true);
     try {
       await register(formData);
@@ -65,8 +95,20 @@ export default function Register() {
         <Card className="backdrop-blur-xl bg-white/95 shadow-2xl border border-white/20 hover:shadow-orange-200/50 transition-all duration-300">
           <CardHeader className="text-center space-y-2 pb-6">
             <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 rounded-3xl flex items-center justify-center animate-float shadow-lg shadow-orange-500/30">
-                <span className="text-4xl">❤️</span>
+              <div className="relative w-20 h-20 rounded-3xl flex items-center justify-center animate-float shadow-lg shadow-orange-500/30 overflow-hidden">
+                <img 
+                  src="/food-rescue-logo.png" 
+                  alt="Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const fallback = e.target.nextElementSibling;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-full bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 hidden items-center justify-center">
+                  <span className="text-4xl">❤️</span>
+                </div>
               </div>
             </div>
             <CardTitle className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 bg-clip-text text-transparent">
@@ -125,6 +167,7 @@ export default function Register() {
                     name="email" 
                     type="email" 
                     required 
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                     placeholder="you@example.com" 
                     onChange={handleChange} 
                     className="pl-10 h-12"
@@ -142,11 +185,33 @@ export default function Register() {
                     name="password" 
                     type="password" 
                     required 
-                    placeholder="Minimum 8 characters" 
+                    placeholder="Create a strong password" 
                     onChange={handleChange} 
                     className="pl-10 h-12"
                     disabled={loading}
                   />
+                </div>
+                <div className="text-xs space-y-1 mt-2">
+                  <div className={`flex items-center gap-2 ${passwordRequirements.length ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span>{passwordRequirements.length ? '✓' : '○'}</span>
+                    <span>At least 8 characters</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${passwordRequirements.uppercase ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span>{passwordRequirements.uppercase ? '✓' : '○'}</span>
+                    <span>One uppercase letter (A-Z)</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${passwordRequirements.lowercase ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span>{passwordRequirements.lowercase ? '✓' : '○'}</span>
+                    <span>One lowercase letter (a-z)</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${passwordRequirements.number ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span>{passwordRequirements.number ? '✓' : '○'}</span>
+                    <span>One number (0-9)</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${passwordRequirements.special ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span>{passwordRequirements.special ? '✓' : '○'}</span>
+                    <span>One special character (!@#$%^&*)</span>
+                  </div>
                 </div>
               </div>
               
